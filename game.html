@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>March Madness Hangman</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+
+  <style>
+    /* Basic styling for the page */
+    body {
+      font-family: 'Rubik', sans-serif; /* Use Rubik font */
+      background-color: #f3f3f3; /* Light grey background */
+      padding: 2rem;
+      margin: 0;
+      text-align: center; /* Center align text */
+      color: #333; /* Darker text color */
+    }
+
+    /* Main title styling */
+    h1 {
+      font-size: 2.5rem; /* Larger title */
+      color: #2e3a59; /* Dark blue color */
+      margin-bottom: 1rem;
+    }
+
+    /* Instructions box styling */
+    #instructions {
+      max-width: 700px;
+      margin: 1rem auto;
+      padding: 1.5rem;
+      background: #fff; /* White background */
+      border-radius: 12px; /* More rounded corners */
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Softer shadow */
+      text-align: left; /* Left align text inside instructions */
+      line-height: 1.6;
+    }
+    #instructions h2 {
+        text-align: center; /* Center instruction title */
+        margin-bottom: 1rem;
+        color: #2e3a59;
+    }
+
+    /* Wrapper for the main game area */
+    #gameWrapper {
+      max-width: 900px;
+      margin: 2rem auto; /* More space around the game */
+      padding: 2rem;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Styling for the word display (underscores and letters) */
+    #wordDisplay {
+      font-size: 2.5rem; /* Larger font for the word */
+      letter-spacing: 0.8rem; /* More spacing between letters/underscores */
+      margin: 2rem 0; /* More vertical space */
+      color: #2e3a59;
+      font-weight: 600; /* Bolder font */
+      min-height: 40px; /* Ensure space even when empty */
+      padding: 0 1rem; /* Padding for very short words */
+      word-wrap: break-word; /* Wrap long words if needed */
+    }
+
+    /* Container for alphabet buttons */
+    .alphabet {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 650px; /* Slightly wider */
+      margin: 1.5rem auto;
+      gap: 0.5rem; /* Use gap for spacing */
+    }
+
+    /* Individual letter button styling */
+    .letter {
+      padding: 0.6rem 1.1rem; /* Slightly larger padding */
+      border: none; /* Remove default border */
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.1rem; /* Larger font size */
+      font-weight: 600;
+      background-color: #e9ecef; /* Light grey background */
+      color: #495057; /* Dark grey text */
+      transition: all 0.2s ease-in-out; /* Smoother transition */
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow */
+    }
+    .letter:hover:not(:disabled) {
+        background-color: #ced4da; /* Darker grey on hover */
+        transform: translateY(-2px); /* Slight lift effect */
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .letter:active:not(:disabled) {
+        transform: translateY(0px); /* Press down effect */
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .letter:disabled {
+        cursor: not-allowed;
+        opacity: 0.6; /* Fade out disabled buttons */
+    }
+    .letter.correct {
+      background-color: #28a745; /* Bootstrap success green */
+      color: white;
+    }
+    .letter.wrong {
+      background-color: #dc3545; /* Bootstrap danger red */
+      color: white;
+    }
+
+    /* Hearts display */
+    .hearts {
+      font-size: 2rem; /* Larger hearts */
+      margin: 1rem 0 0.5rem 0; /* Adjusted margin */
+      color: #dc3545; /* Red color for hearts */
+    }
+
+    /* Score display styling */
+    .score {
+        font-size: 1.5rem; /* Adjust size as needed */
+        margin: 0.5rem 0 1rem 0; /* Add some margin */
+        color: #6c757d; /* Use a neutral color */
+        font-weight: 600;
+    }
+
+    /* Bubble message for incorrect guess */
+    .bubble {
+      display: none; /* Hidden by default */
+      background: #dc3545; /* Red background */
+      color: white;
+      padding: 0.7rem 1.2rem; /* More padding */
+      border-radius: 25px; /* Pill shape */
+      margin: 1.5rem auto;
+      width: fit-content;
+      font-weight: bold;
+      box-shadow: 0 3px 8px rgba(220, 53, 69, 0.4); /* Reddish shadow */
+    }
+    .bubble.show {
+      display: inline-block; /* Show the bubble */
+      animation: pop 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55), fadeOut 2s ease 0.8s forwards; /* Pop then fade */
+    }
+
+    /* Pop animation for bubble */
+    @keyframes pop {
+      0% { transform: scale(0.7); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    /* Fade out animation for bubble */
+    @keyframes fadeOut {
+      to { opacity: 0; transform: scale(0.8); } /* Slight shrink on fade */
+    }
+
+    /* Difficulty selector styling */
+    #difficultySelect {
+      margin: 1rem 0 1.5rem 0;
+      font-size: 1rem;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #ced4da;
+      background-color: #fff;
+    }
+
+    /* Sound toggle container */
+    #soundToggleContainer {
+      margin-top: 1.5rem;
+      font-size: 1rem;
+      text-align: center;
+      display: flex; /* Use flexbox for alignment */
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem; /* Space between label and switch */
+    }
+
+    /* Switch styling (for sound toggle) */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #28a745; /* Green when on */
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    /* Message styling for winning a ROUND ("OVERTIME!") */
+    #roundWinMessage {
+      display: none; /* Hidden by default */
+      font-size: 2.2rem; /* Slightly larger */
+      color: #28a745; /* Green color for overtime */
+      margin: 1.5rem 0;
+      font-weight: bold;
+      animation: pop 0.5s ease-in-out; /* Use pop animation */
+    }
+
+     /* Message styling for losing the GAME */
+    #gameOverMessage {
+      display: none; /* Hidden by default */
+      font-size: 1.8rem;
+      color: #dc3545; /* Red color */
+      margin: 1.5rem 0;
+      font-weight: bold;
+      animation: pop 0.5s ease-in-out;
+    }
+    #gameOverMessage .correct-word { /* Styling for showing the correct word */
+        display: block;
+        font-size: 1.5rem;
+        color: #6c757d; /* Grey color */
+        margin-top: 0.5rem;
+    }
+
+    /* Start/Restart button styling */
+    #startButton {
+      padding: 0.8rem 1.8rem; /* Larger button */
+      font-size: 1.2rem;
+      margin-top: 2rem;
+      display: inline-block;
+      background-color: #007bff; /* Bootstrap primary blue */
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+      box-shadow: 0 2px 5px rgba(0, 123, 255, 0.3);
+    }
+    #startButton:hover {
+      background-color: #0056b3; /* Darker blue on hover */
+       box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
+       transform: translateY(-1px);
+    }
+     #startButton:active {
+       transform: translateY(0px);
+       box-shadow: 0 1px 3px rgba(0, 123, 255, 0.3);
+    }
+    #startButton:disabled { /* Style when game is running */
+        background-color: #6c757d;
+        cursor: not-allowed;
+        opacity: 0.7;
+        box-shadow: none;
+        transform: none;
+    }
+
+  </style>
+</head>
+<body>
+
+  <h1>March Madness Hangman</h1>
+
+  <div id="instructions">
+    <h2>How to Play</h2>
+    <p>Welcome to March Madness Hangman! Can you guess the college basketball team names?</p>
+    <p>Select a difficulty level below. Then, click the "Start Game" button.</p>
+    <p>Guess the hidden team name by clicking letters in the alphabet below. Correct guesses reveal letters in the word. Each incorrect guess ("Bracket Buster!") removes a heart ❤️.</p>
+    <p>Guess the word to go into "OVERTIME!" and get the next word **(and 1 point!)**. The game ends only when you run out of hearts!</p>
+  </div>
+
+  <div id="gameWrapper">
+    <label for="difficultySelect" style="margin-right: 0.5rem; font-weight: 600;">Difficulty:</label>
+    <select id="difficultySelect">
+      <option value="easy">Easy (8 ❤️)</option>
+      <option value="medium" selected>Medium (5 ❤️)</option>
+      <option value="hard">Hard (3 ❤️)</option>
+    </select>
+
+    <div class="hearts" id="hearts">❤️❤️❤️❤️❤️</div>
+    <div id="scoreDisplay" class="score">Score: 0</div>
+
+    <div id="wordDisplay">_ _ _ _ _</div>
+
+    <div class="alphabet" id="alphabet">
+        </div>
+
+    <div id="soundToggleContainer">
+        <span>Sound Effects:</span>
+        <label class="switch">
+            <input type="checkbox" id="soundToggle" checked />
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div class="bubble" id="bubble">Bracket Buster!</div>
+    <div id="roundWinMessage">OVERTIME!</div>
+    <div id="gameOverMessage">
+        No one's bracket is perfect! Try again?
+        <span class="correct-word" id="correctWordReveal"></span>
+    </div>
+
+
+    <button id="startButton">Start Game</button>
+  </div>
+
+  <script>
+    // --- DOM Element References ---
+    const wordDisplay = document.getElementById('wordDisplay');
+    const heartsDiv = document.getElementById('hearts');
+    const alphabetDiv = document.getElementById('alphabet');
+    const difficultySelect = document.getElementById('difficultySelect');
+    const soundToggle = document.getElementById('soundToggle');
+    const bubble = document.getElementById('bubble');
+    const roundWinMessage = document.getElementById('roundWinMessage');
+    const gameOverMessage = document.getElementById('gameOverMessage');
+    const correctWordReveal = document.getElementById('correctWordReveal');
+    const startButton = document.getElementById('startButton');
+    const instructionsDiv = document.getElementById('instructions');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+
+
+    // --- Game Words ---
+    const wordList = [ /* Word list remains the same */
+        'arizona', 'baylor', 'connecticut', 'duke', 'gonzaga', 'houston',
+        'illinois', 'kansas', 'kentucky', 'michigan', 'purdue', 'tennessee',
+        'villanova', 'virginia', 'alabama', 'arkansas', 'auburn', 'creighton',
+        'florida', 'indiana', 'iowastate', 'marquette', 'maryland', 'memphis',
+        'northcarolina', 'oregon', 'sandiegostate', 'syracuse', 'texas', 'ucla',
+        'wisconsin', 'xavier', 'butler', 'dayton', 'providence', 'setonhall',
+        'stjohns', 'georgetown', 'depaul', 'colorado', 'utah', 'washington',
+        'california', 'stanford', 'ohiostate', 'rutgers', 'pennstate', 'nebraska'
+    ];
+
+    // --- Game State Variables ---
+    let currentWord = '';
+    let guessedLetters = [];
+    let hearts = 5;
+    let gameActive = false;
+    let score = 0;
+
+    // --- Difficulty Settings ---
+    const difficulties = { easy: 8, medium: 5, hard: 3 };
+
+    // --- Tone.js Sound Synthesis Setup ---
+    // *** UPDATED/NEW SYNTH DEFINITIONS ***
+
+    // Incorrect guess sound ("errrrr" buzzer)
+    const errrSynth = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 0.1 } }).toDestination();
+    // Game Over sound ("bum bum bummmm")
+    const bumSynth = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.1 } }).toDestination();
+    // Start sound
+    const startSynth = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.1 } }).toDestination();
+    // Round Win sound
+    const roundWinSynth = new Tone.PolySynth(Tone.Synth, { polyphony: 4, volume: -8, oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.2 } }).toDestination();
+    // Correct guess sound (Cheer approximation - bright chord)
+    const correctLetterSynth = new Tone.PolySynth(Tone.Synth, {
+        polyphony: 3,
+        volume: -10,
+        oscillator : { type : 'triangle' }, // Brighter than sine
+        envelope: { attack: 0.005, decay: 0.1, sustain: 0.1, release: 0.1 }
+    }).toDestination();
+
+    // *** REMOVED dunkSound definition ***
+    // const dunkSound = new Tone.MembraneSynth({ pitchDecay: 0.01, octaves: 5, oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.3, sustain: 0.01, release: 0.1, attackCurve: 'exponential' } }).toDestination();
+    // Click sound synth definition is removed/commented out
+    // const clickSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination();
+
+
+    // Define sound playing function
+    const playSound = (soundType) => {
+      if (!soundToggle.checked) return;
+      Tone.start().catch(err => console.error("Tone.start() failed:", err));
+      const now = Tone.now();
+
+      try {
+        switch (soundType) {
+          // Click case is removed
+          case 'correct': // *** UPDATED SOUND ***
+            // Play a bright, quick chord to signify correct letter (cheer approx.)
+            correctLetterSynth.triggerAttackRelease(['C5', 'E5', 'G5'], '16n', now);
+            // dunkSound.triggerAttackRelease('C2', '8n', now); // Replaced dunk sound
+            break;
+          case 'wrong':
+            errrSynth.triggerAttackRelease('G2', '0.4s', now);
+            break;
+          case 'roundWin':
+            roundWinSynth.triggerAttackRelease(['C4', 'E4', 'G4', 'C5'], '8n', now);
+            break;
+          case 'gameOver':
+            const bumDuration = '8n';
+            const longBumDuration = '2n';
+            const bumInterval = Tone.Time(bumDuration).toSeconds() * 1.2;
+            const longBumStartOffset = bumInterval * 3;
+
+            bumSynth.triggerAttackRelease('C2', bumDuration, now);
+            bumSynth.triggerAttackRelease('C2', bumDuration, now + bumInterval);
+            bumSynth.triggerAttackRelease('C2', bumDuration, now + bumInterval * 2);
+            bumSynth.triggerAttackRelease('G1', longBumDuration, now + longBumStartOffset);
+            break;
+          case 'start':
+             startSynth.triggerAttackRelease('G4', '8n', now);
+            break;
+          default:
+            console.warn("Unknown sound type:", soundType);
+        }
+      } catch (error) {
+          console.error("Tone.js error playing sound:", error);
+      }
+    };
+
+
+    // --- Core Game Functions ---
+    function updateScoreDisplay() {
+        scoreDisplay.textContent = `Score: ${score}`;
+    }
+
+    function createAlphabetButtons() {
+      console.log("Creating alphabet buttons...");
+      alphabetDiv.innerHTML = '';
+      const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+      letters.forEach(letter => {
+        const btn = document.createElement('button');
+        btn.textContent = letter.toUpperCase();
+        btn.className = 'letter';
+        btn.dataset.letter = letter;
+        btn.onclick = () => handleGuess(letter, btn);
+        alphabetDiv.appendChild(btn);
+      });
+      console.log("Alphabet buttons created.");
+    }
+
+    function updateWordDisplay() {
+        let displayTeam = currentWord;
+        const replacements = { 'state': ' state', 'carolina': ' carolina', 'diego': ' diego' };
+        for (const key in replacements) {
+            if (displayTeam.endsWith(key) && displayTeam.length > key.length) {
+                displayTeam = displayTeam.substring(0, displayTeam.length - key.length) + replacements[key];
+                break;
+            }
+        }
+      const display = displayTeam.split('').map(letter => {
+          if (letter === ' ') return ' ';
+          return guessedLetters.includes(letter) ? letter.toUpperCase() : '_';
+      }).join(' ');
+      wordDisplay.textContent = display;
+    }
+
+    function updateHeartsDisplay() {
+      heartsDiv.textContent = '❤️'.repeat(Math.max(0, hearts));
+    }
+
+    function handleGuess(letter, btn) {
+      if (!gameActive || btn.disabled) return;
+      // Click sound call removed
+      btn.disabled = true;
+
+      if (guessedLetters.includes(letter)) return;
+      guessedLetters.push(letter);
+
+      if (currentWord.includes(letter)) {
+        btn.classList.add('correct');
+        playSound('correct'); // *** Use new correct sound ***
+        updateWordDisplay();
+        checkRoundWinCondition();
+      } else {
+        btn.classList.add('wrong');
+        playSound('wrong');
+        hearts--;
+        updateHeartsDisplay();
+        showBubble();
+        checkGameOverCondition();
+      }
+    }
+
+    function checkRoundWinCondition() {
+      const wordLetters = currentWord.split('');
+      if (wordLetters.every(letter => guessedLetters.includes(letter))) {
+        console.log("Round won!");
+        score++;
+        console.log(`Score increased to: ${score}`);
+        updateScoreDisplay();
+
+        gameActive = false;
+        playSound('roundWin');
+        launchConfetti();
+        showTemporaryMessage(roundWinMessage, 2000);
+        disableAlphabetButtons();
+
+        setTimeout(() => {
+            startNewRound();
+        }, 2200);
+      }
+    }
+
+    function checkGameOverCondition() {
+      if (hearts <= 0) {
+        console.log("Game over!");
+        gameActive = false;
+        playSound('gameOver');
+        gameOverMessage.style.display = 'block';
+        correctWordReveal.textContent = `The word was: ${currentWord.toUpperCase()}`;
+        startButton.textContent = 'Try Again?';
+        startButton.disabled = false;
+        difficultySelect.disabled = false;
+        disableAlphabetButtons();
+      }
+    }
+
+    function disableAlphabetButtons() {
+        const buttons = alphabetDiv.querySelectorAll('.letter');
+        buttons.forEach(button => button.disabled = true);
+    }
+
+    function showBubble() {
+      bubble.classList.add('show');
+      setTimeout(() => {
+          if (bubble.classList.contains('show')) {
+             bubble.classList.remove('show');
+          }
+      }, 2400);
+    }
+
+    function showTemporaryMessage(element, duration) {
+        element.style.display = 'block';
+        setTimeout(() => {
+            element.style.display = 'none';
+        }, duration);
+    }
+
+    function launchConfetti() {
+        if (typeof confetti === 'function') {
+            confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+        } else {
+            console.warn("Confetti library not loaded.");
+        }
+    }
+
+    function initializeGame() {
+        console.log("Start button clicked. Initializing game...");
+        Tone.start().catch(error => {
+            console.error("Tone.js audio context failed to start explicitly:", error);
+        });
+
+        score = 0;
+        console.log(`Score reset to: ${score}`);
+        updateScoreDisplay();
+
+        const selectedDifficulty = difficultySelect.value;
+        hearts = difficulties[selectedDifficulty] || difficulties['medium'];
+        console.log(`Difficulty: ${selectedDifficulty}, Hearts: ${hearts}`);
+        updateHeartsDisplay();
+        console.log("Calling startNewRound...");
+        startNewRound();
+        instructionsDiv.style.display = 'none';
+    }
+
+
+    function startNewRound() {
+      console.log("Starting new round...");
+      gameActive = true;
+      guessedLetters = [];
+
+      let newWord;
+      do {
+          newWord = wordList[Math.floor(Math.random() * wordList.length)];
+      } while (newWord === currentWord && wordList.length > 1);
+      currentWord = newWord;
+      console.log(`New word selected: ${currentWord}`);
+
+      updateHeartsDisplay();
+      updateScoreDisplay();
+      updateWordDisplay();
+      createAlphabetButtons();
+      roundWinMessage.style.display = 'none';
+      gameOverMessage.style.display = 'none';
+      bubble.classList.remove('show');
+      startButton.textContent = 'Restart Game';
+      startButton.disabled = true;
+      difficultySelect.disabled = true;
+
+      playSound('start');
+      console.log("New round setup complete.");
+    }
+
+    // --- Event Listeners ---
+    startButton.addEventListener('click', initializeGame);
+
+    // --- Initial Page Setup ---
+    hearts = difficulties[difficultySelect.value];
+    updateHeartsDisplay();
+    updateScoreDisplay();
+    updateWordDisplay();
+    alphabetDiv.innerHTML = '<p style="color: #6c757d;">Click "Start Game" to begin!</p>';
+
+  </script>
+
+</body>
+</html>

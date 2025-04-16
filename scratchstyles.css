@@ -1,0 +1,178 @@
+/* Reset & base styling */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #b5d1e0;
+    margin: 0;
+    padding: 0;
+    color: #333;
+  }
+  body {
+    margin: 0;
+    padding-top: 60px; /* match or exceed navbar height */
+  }
+  /* Navigation Bar */
+
+  
+  .nav-links {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    padding: 0;
+    margin: 0;
+  }
+  .navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000; /* stays on top of other elements */
+    background-color: white; /* or whatever background you want */
+    padding: 10px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* optional shadow for depth */
+  }
+  
+  .nav-links a {
+    text-decoration: none;
+    color: #000000;
+    font-weight: 500;
+    font-size: 1rem;
+  }
+  
+  .nav-links a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Page title spacing */
+  .page-title {
+    padding-top: 6rem;
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: #222;
+  }
+  
+  /* Sections (Resume, March Madness) */
+  .resume,
+  .section {
+    max-width: 800px;
+    margin: 3rem auto;
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Headings */
+  h2 {
+    font-size: 1.8rem;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 0.5rem;
+    margin-top: 0;
+  }
+  
+  h3 {
+    font-size: 1.4rem;
+    margin-top: 2rem;
+    color: #444;
+  }
+  
+  h4 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    color: #555;
+  }
+  
+  /* Links & Lists */
+  a {
+    color: #1a73e8;
+    text-decoration: none;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+  }
+  
+  ul {
+    margin-top: 0.5rem;
+    padding-left: 1.5rem;
+  }
+  
+  ul li {
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Nested Sweet 16 List */
+  .section ul li ul {
+    margin-top: 0.3rem;
+    margin-left: 1.5rem;
+    list-style-type: circle;
+  }
+  
+  strong {
+    font-weight: bold;
+  }
+  
+  /* Smooth scroll fallback */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  .hawks-logo {
+    width: 120px; /* Much smaller */
+    height: auto;
+    display: block;
+    
+    border: 2px solid #ccc; /* Light gray border */
+    padding: 8px; /* Space between image and border */
+    border-radius: 6px; /* Optional: soft rounded corners */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Optional: subtle shadow */
+  }
+  
+  .byu-logo {
+    width: 120px; /* Much smaller */
+    height: auto;
+    display: block;
+    
+    border: 2px solid #ccc; /* Light gray border */
+    padding: 8px; /* Space between image and border */
+    border-radius: 6px; /* Optional: soft rounded corners */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Optional: subtle shadow */
+  }
+  .video-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 2rem auto;
+    padding: 8px;
+    border: 2px solid white;
+    border-radius: 6px;
+    max-width: 75%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Optional: make it responsive */
+  .video-wrapper iframe {
+    width: 50%;
+    height: 400px;
+    border: none;
+  }
+
+  .tableau-wrapper {
+    max-width: 1300px;
+    margin: 2rem auto;
+    padding: 8px;
+    border: 2px solid white;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+  .tableau-wrapper object {
+    display: block;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+    
+  
